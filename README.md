@@ -1,11 +1,11 @@
 # Purpose
-Brkldis is a very basic Redis protocol implementation using embedded berkeley db as backend.
+Brkldbis is a very basic Redis protocol implementation using embedded berkeley db as backend.
 It allows to use Redis client to acces and permanent storing in fast db.
 
 # Benefits
 * Single jar distribution
 * Fast persistence backend
-* Wide range of client implementations
+* Wide range of client implementations (because Redis protocol is supported)
 * No unneeded code - small code base can be verified by securirity and supported by inhause departments
 
 # With Redis comparison
@@ -29,7 +29,7 @@ SET: 118063.76 requests per second, p50=0.207 msec
 GET: 115606.94 requests per second, p50=0.207 msec      
 ```
 
-Config command is not implemented in brkldis and therefore ERROR about CONFIGwas logged in command output.
+Config command is not implemented in brkldis and therefore ERROR about CONFIG was logged in command output.
 
 ```
              Requests per second
