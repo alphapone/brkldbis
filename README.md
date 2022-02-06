@@ -33,10 +33,10 @@ Config command is not implemented in brkldis.
 
 So as you can see we have almost same performance as redis....
 
-#BUILD
+# BUILD
 Run ```sbt assembly```
 
-#INSTALL
+# INSTALL
 Copy builded jar file into any preffered location and run ```java -jar $jar_locatioin/$jar```.
 You can find jar using ```find . -name *.jar``` command.
 
