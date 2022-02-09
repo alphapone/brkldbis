@@ -1,5 +1,6 @@
 package com.pmkitten.brkldbis
 
+import java.util.concurrent.{Executors, TimeUnit}
 import scala.annotation.tailrec
 
 /**
@@ -29,12 +30,13 @@ object Server {
     import java.io._
     import scala.io._
 
+    val cronPool = Executors.newScheduledThreadPool(1)
+    cronPool.schedule(new Thread(() => SaveMonitor.runSavingOnce()), 10, TimeUnit.SECONDS)
+
     SaveMonitor.setDbName(getDb(args))
-    var rc = 0
     val server = new ServerSocket(getPort(args))
     while (true) {
       val s = server.accept()
-      rc = rc + 1
       new Thread {
         override def run():Unit = {
           val in = BufferedSource(s.getInputStream)
@@ -54,12 +56,6 @@ object Server {
           }
         }
       }.start()
-      if (rc>2000) {
-        rc=0
-        new Thread {
-          SaveMonitor.runSavingOnce()
-        }.start()
-      }
     }
   }
 }
