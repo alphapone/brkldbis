@@ -2,6 +2,9 @@ package com.pmkitten.brkldbis
 
 import java.util.concurrent.{Executors, TimeUnit}
 import scala.annotation.tailrec
+import java.net._
+import java.io._
+import scala.io._
 
 /**
  * brkldbis server
@@ -22,42 +25,42 @@ object Server {
       getArg(args.tail, arg)
   }
 
+  @tailrec
+  def handleLines(lines:Iterator[String], out:PrintStream):Unit = {
+    if (lines.hasNext) {
+      new RespHandler(lines, out).handle()
+      out.flush()
+      handleLines(lines, out)
+    }
+  }
+
+  @tailrec
+  def handleServerSocket(socket:ServerSocket):Unit = {
+    if (socket!=null && !socket.isClosed) {
+      val s = socket.accept()
+      new Thread(()=>
+        try {
+          handleLines(BufferedSource(s.getInputStream).getLines(), new PrintStream(s.getOutputStream))
+        } catch {
+          case ignored:java.net.SocketException =>
+          // connection reset
+        }
+        finally {
+          s.close()
+        }
+      ).start()
+      handleServerSocket(socket)
+    }
+  }
+
   def getPort(args:Array[String]):Int = getArg(args, "--port").map(x=>x.toInt).getOrElse(DEFAULT_PORT)
   def getDb(args:Array[String]):String = getArg(args, "--db").getOrElse(DEFAULT_DB)
 
   def main(args:Array[String]):Unit = {
-    import java.net._
-    import java.io._
-    import scala.io._
-
+    SaveMonitor.setDbName(getDb(args))
     val cronPool = Executors.newScheduledThreadPool(1)
     cronPool.schedule(new Thread(() => SaveMonitor.runSavingOnce()), 10, TimeUnit.SECONDS)
-
-    SaveMonitor.setDbName(getDb(args))
-    val server = new ServerSocket(getPort(args))
-    while (true) {
-      val s = server.accept()
-      new Thread {
-        override def run():Unit = {
-          val in = BufferedSource(s.getInputStream)
-          val out = new PrintStream(s.getOutputStream)
-          val lines = in.getLines()
-          try {
-            while (lines.hasNext) {
-              new RespHandler(lines, out).handle()
-              out.flush()
-            }
-          } catch {
-            case ignored:java.net.SocketException =>
-              // connection reset
-          }
-          finally {
-            s.close()
-          }
-        }
-      }.start()
-    }
+    handleServerSocket(new ServerSocket(getPort(args)))
+    cronPool.shutdown()
   }
 }
-
-
