@@ -34,25 +34,25 @@ class RespHandler(in:Iterator[String], out:PrintStream) {
     }
   }
 
+  import scala.annotation.tailrec
+  @tailrec
+  private def readDataLen(sb:StringBuilder, readed:Int, len:Int):Unit = {
+    if (readed < len) {
+      if (hasNext) {
+        val line = next()
+        sb.append(line)
+        readDataLen(sb, readed + line.getBytes.length + System.lineSeparator().length, len)
+      }
+    }
+  }
+
   private def readSomeStringArg:String = {
       val line = next()
       if (line.startsWith("$")) {
         val arglen = line.substring(1).replaceAll("\r","").toInt
-        var bl = 0
-        var retVal = ""
-        while (bl < arglen) {
-          if (hasNext) {
-            val line = next()
-            bl = bl + line.getBytes.length + System.lineSeparator().length
-            if (retVal.isEmpty)
-              retVal = line
-            else
-              retVal = retVal + line
-          } else {
-            bl = arglen
-          }
-        }
-        retVal
+        val sb = new StringBuilder
+        readDataLen(sb, 0, arglen)
+        sb.toString()
       } else {
         ""
       }
